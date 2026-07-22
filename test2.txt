@@ -1,0 +1,5 @@
+Invoice #1234
+Date: 2024-03-15
+Bill To: John Smith, Acme Corp, New York
+Amount Due: $1,250.00
+Due Date: 2024-04-01
