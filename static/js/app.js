@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearSearchBtn: document.getElementById('clearSearchBtn'),
         categoryPills: document.getElementById('categoryPills'),
         sortSelect: document.getElementById('sortSelect'),
+        exportCsvBtn: document.getElementById('exportCsvBtn'),
         
         // Feed & States
         feedList: document.getElementById('feedList'),
@@ -236,6 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </a>
 
                     <div class="card-actions">
+                        <button class="btn btn-sm btn-secondary btn-copy-single" data-id="${item.id}" title="Copy release note text to clipboard">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            Copy
+                        </button>
                         <button class="btn btn-sm btn-card-tweet btn-tweet-single" data-id="${item.id}">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                             Tweet Update
@@ -260,6 +265,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const card = document.querySelector(`.note-card[data-id="${id}"]`);
                 if (card) {
                     card.classList.toggle('selected', e.target.checked);
+                }
+            });
+        });
+
+        // Copy Buttons
+        document.querySelectorAll('.btn-copy-single').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                const item = state.items.find(i => i.id === id);
+                if (item) {
+                    const textToCopy = `📌 BigQuery Release Note (${item.date})\nCategory: ${item.category}\n\n${item.text}\n\n🔗 Documentation: ${item.link}`;
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        showToast('Release note text copied to clipboard!', 'success');
+                    }).catch(err => {
+                        console.error('Copy failed:', err);
+                        showToast('Failed to copy text.', 'info');
+                    });
                 }
             });
         });
@@ -315,6 +338,42 @@ document.addEventListener('DOMContentLoaded', () => {
         state.sortBy = e.target.value;
         renderFeed();
     });
+
+    // Export CSV Listener
+    if (elements.exportCsvBtn) {
+        elements.exportCsvBtn.addEventListener('click', () => {
+            const filtered = getFilteredItems();
+            if (filtered.length === 0) {
+                showToast('No items available to export.', 'info');
+                return;
+            }
+
+            const headers = ['Date', 'Category', 'Summary', 'Documentation Link', 'Updated Timestamp'];
+            const csvRows = [headers.join(',')];
+
+            filtered.forEach(item => {
+                const row = [
+                    `"${(item.date || '').replace(/"/g, '""')}"`,
+                    `"${(item.category || '').replace(/"/g, '""')}"`,
+                    `"${(item.text || '').replace(/"/g, '""')}"`,
+                    `"${(item.link || '').replace(/"/g, '""')}"`,
+                    `"${(item.updated || '').replace(/"/g, '""')}"`
+                ];
+                csvRows.push(row.join(','));
+            });
+
+            const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csvRows.join('\n'));
+            const link = document.createElement('a');
+            link.setAttribute('href', csvContent);
+            const todayStr = new Date().toISOString().split('T')[0];
+            link.setAttribute('download', `bigquery_release_notes_${todayStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast(`Exported ${filtered.length} release notes to CSV!`, 'success');
+        });
+    }
 
     elements.resetFiltersBtn.addEventListener('click', () => {
         elements.searchInput.value = '';

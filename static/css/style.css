@@ -436,6 +436,12 @@ body {
     color: var(--text-muted);
 }
 
+.view-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .select-input {
     padding: 0.45rem 0.85rem;
     background: var(--bg-input);
@@ -446,6 +452,18 @@ body {
     font-size: 0.8rem;
     outline: none;
     cursor: pointer;
+}
+
+.btn-export-csv {
+    background: var(--bg-pill);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-export-csv:hover {
+    background: var(--accent-blue-bg, rgba(59, 130, 246, 0.15));
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
 }
 
 /* Batch Selected Bar */
