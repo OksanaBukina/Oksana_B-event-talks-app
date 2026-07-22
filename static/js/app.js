@@ -15,12 +15,44 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedIds: new Set(),
         activeModalItem: null,
         activeHashtags: new Set(['#SQL', '#DataEngineering', '#Databases']),
-        theme: localStorage.getItem('bq_theme') || 'dark'
+        theme: localStorage.getItem('bq_theme') || 'dark',
+        lang: localStorage.getItem('sql_lang') || 'en'
+    };
+
+    // Translation Dictionary
+    const i18n = {
+        ru: {
+            Feature: 'Новая функция',
+            Changed: 'Изменено',
+            Issue: 'Исправление',
+            Deprecated: 'Устарело',
+            General: 'Общее',
+            Announcement: 'Анонс',
+            copy: 'Копировать',
+            tweet: 'Твит',
+            linkedin: 'LinkedIn',
+            viewDocs: 'Документация',
+            exportCsv: 'Экспорт в CSV'
+        },
+        pl: {
+            Feature: 'Nowa funkcja',
+            Changed: 'Zmieniono',
+            Issue: 'Poprawka',
+            Deprecated: 'Wycofane',
+            General: 'Ogólne',
+            Announcement: 'Ogłoszenie',
+            copy: 'Kopiuj',
+            tweet: 'Tweet',
+            linkedin: 'LinkedIn',
+            viewDocs: 'Dokumentacja',
+            exportCsv: 'Eksportuj do CSV'
+        }
     };
 
     // --- DOM Elements ---
     const elements = {
         themeToggle: document.getElementById('themeToggle'),
+        langSelector: document.getElementById('langSelector'),
         refreshBtn: document.getElementById('refreshBtn'),
         feedStatusBadge: document.getElementById('feedStatusBadge'),
         
@@ -88,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toastContainer: document.getElementById('toastContainer')
     };
 
-    // --- Initialize Theme ---
+    // --- Initialize Theme & Language ---
     document.documentElement.setAttribute('data-theme', state.theme);
 
     elements.themeToggle.addEventListener('click', () => {
@@ -97,6 +129,24 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('bq_theme', state.theme);
         showToast(`Switched to ${state.theme} mode`, 'info');
     });
+
+    if (elements.langSelector) {
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-lang') === state.lang);
+        });
+
+        elements.langSelector.addEventListener('click', (e) => {
+            const btn = e.target.closest('.lang-btn');
+            if (!btn) return;
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.lang = btn.getAttribute('data-lang');
+            localStorage.setItem('sql_lang', state.lang);
+            renderFeed();
+            const names = { en: 'English 🇬🇧', ru: 'Русский 🇷🇺', pl: 'Polski 🇵🇱' };
+            showToast(`Language changed to ${names[state.lang] || state.lang}`, 'info');
+        });
+    }
 
     // --- Fetch Release Notes ---
     async function loadReleaseNotes(forceRefresh = false) {
@@ -239,6 +289,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const srcClass = `src-badge-${(item.source || 'bigquery').toLowerCase()}`;
         const isSelected = state.selectedIds.has(item.id);
 
+        const langDict = i18n[state.lang] || {};
+        const catLabel = langDict[item.category] || item.category;
+        const copyLabel = langDict['copy'] || 'Copy';
+        const tweetLabel = langDict['tweet'] || 'Tweet';
+        const linkedinLabel = langDict['linkedin'] || 'LinkedIn';
+        const docsLabel = langDict['viewDocs'] || 'View Docs';
+
         return `
             <div class="note-card ${isSelected ? 'selected' : ''}" data-id="${item.id}">
                 <div class="card-top">
@@ -247,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${escapeHtml(item.source_name || item.source)}
                         </span>
                         <span class="badge ${catClass}">
-                            ${escapeHtml(item.category)}
+                            ${escapeHtml(catLabel)}
                         </span>
                     </div>
                     <div class="card-meta">
@@ -262,17 +319,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="card-footer">
                     <a href="${item.link}" target="_blank" rel="noopener" class="link-gcp">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        View in Google Cloud Docs
+                        ${escapeHtml(docsLabel)}
                     </a>
 
                     <div class="card-actions">
                         <button class="btn btn-sm btn-secondary btn-copy-single" data-id="${item.id}" title="Copy release note text to clipboard">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            Copy
+                            ${escapeHtml(copyLabel)}
+                        </button>
+                        <button class="btn btn-sm btn-linkedin btn-linkedin-single" data-id="${item.id}" title="Share post to LinkedIn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+                            ${escapeHtml(linkedinLabel)}
                         </button>
                         <button class="btn btn-sm btn-card-tweet btn-tweet-single" data-id="${item.id}">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                            Tweet Update
+                            ${escapeHtml(tweetLabel)}
                         </button>
                     </div>
                 </div>
@@ -312,6 +373,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error('Copy failed:', err);
                         showToast('Failed to copy text.', 'info');
                     });
+                }
+            });
+        });
+
+        // LinkedIn Share Buttons
+        document.querySelectorAll('.btn-linkedin-single').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                const item = state.items.find(i => i.id === id);
+                if (item) {
+                    const postText = `📌 SQL Release Update: ${item.source_name || item.source}\nCategory: ${item.category}\n\n${item.text}\n\n🔗 Documentation: ${item.link}\n#SQL #DataEngineering #Databases #${item.source}`;
+                    navigator.clipboard.writeText(postText);
+                    const intentUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(item.link)}`;
+                    window.open(intentUrl, '_blank', 'noopener,noreferrer');
+                    const msg = state.lang === 'ru' ? 'Ссылка открыта! Текст поста скопирован в буфер.' : (state.lang === 'pl' ? 'Link otwarty! Tekst skopiowany do schowka.' : 'LinkedIn opened! Post text copied to clipboard.');
+                    showToast(msg, 'success');
                 }
             });
         });

@@ -233,6 +233,50 @@ body {
     to { transform: rotate(360deg); }
 }
 
+.lang-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 0.2rem;
+    border-radius: 8px;
+}
+
+.lang-btn {
+    padding: 0.25rem 0.55rem;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.775rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-pill);
+}
+
+.lang-btn.active {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.btn-linkedin {
+    background-color: #0A66C2;
+    color: #FFFFFF;
+    border: 1px solid #084E96;
+}
+
+.btn-linkedin:hover {
+    background-color: #084E96;
+    box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3);
+}
+
 .btn-theme-toggle {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
