@@ -298,8 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const translateLabel = langDict['translate'] || 'Translate';
 
         let cardContentHtml = item.html;
-        if (state.lang !== 'en' && item.translations && item.translations[state.lang]) {
-            cardContentHtml = `<p class="translated-text">🌐 <em>(${state.lang.toUpperCase()}):</em> ${escapeHtml(item.translations[state.lang])}</p>`;
+        const activeTarget = state.lang === 'en' ? null : state.lang;
+        if (activeTarget && item.translations && item.translations[activeTarget]) {
+            const formatted = escapeHtml(item.translations[activeTarget]).replace(/\n/g, '<br>');
+            cardContentHtml = `<div class="translated-box" style="background: var(--bg-pill); padding: 0.85rem; border-radius: 8px; border-left: 3px solid var(--accent-blue);"><span class="badge badge-general" style="margin-bottom:0.35rem; display:inline-block;">🌐 ${activeTarget.toUpperCase()}</span><p style="margin-top:0.35rem; line-height:1.6; color: var(--text-primary);">${formatted}</p></div>`;
         }
 
         return `
