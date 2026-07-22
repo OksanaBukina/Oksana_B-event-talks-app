@@ -7,12 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
         items: [],
         categories: {},
+        sources: {},
         activeCategory: 'ALL',
+        activeSource: 'ALL',
         searchQuery: '',
         sortBy: 'newest',
         selectedIds: new Set(),
         activeModalItem: null,
-        activeHashtags: new Set(['#BigQuery', '#GoogleCloud', '#DataEngineering']),
+        activeHashtags: new Set(['#SQL', '#DataEngineering', '#Databases']),
         theme: localStorage.getItem('bq_theme') || 'dark'
     };
 
@@ -28,6 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
         statChanged: document.getElementById('statChanged'),
         statLastUpdate: document.getElementById('statLastUpdate'),
         
+        // Source Counts
+        srcCountAll: document.getElementById('srcCountAll'),
+        srcCountBQ: document.getElementById('srcCountBQ'),
+        srcCountOracle: document.getElementById('srcCountOracle'),
+        srcCountTSQL: document.getElementById('srcCountTSQL'),
+        srcCountPG: document.getElementById('srcCountPG'),
+        srcCountSF: document.getElementById('srcCountSF'),
+        
         // Category Counts
         countAll: document.getElementById('countAll'),
         countFeature: document.getElementById('countFeature'),
@@ -38,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Controls
         searchInput: document.getElementById('searchInput'),
         clearSearchBtn: document.getElementById('clearSearchBtn'),
+        sourcePills: document.getElementById('sourcePills'),
         categoryPills: document.getElementById('categoryPills'),
         sortSelect: document.getElementById('sortSelect'),
         exportCsvBtn: document.getElementById('exportCsvBtn'),
@@ -134,11 +145,18 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.statFeatures.textContent = data.categories['Feature'] || 0;
         elements.statChanged.textContent = (data.categories['Changed'] || 0) + (data.categories['Issue'] || 0);
         
-        if (data.items && data.items.length > 0) {
-            elements.statLastUpdate.textContent = data.items[0].date;
-        }
+        const sourceKeys = Object.keys(data.sources || {});
+        elements.statLastUpdate.textContent = `${sourceKeys.length} SQL Engines`;
 
-        // Pill counts
+        // Source counts
+        if (elements.srcCountAll) elements.srcCountAll.textContent = data.total || 0;
+        if (elements.srcCountBQ) elements.srcCountBQ.textContent = data.sources['BigQuery'] || 0;
+        if (elements.srcCountOracle) elements.srcCountOracle.textContent = data.sources['Oracle'] || 0;
+        if (elements.srcCountTSQL) elements.srcCountTSQL.textContent = data.sources['TSQL'] || 0;
+        if (elements.srcCountPG) elements.srcCountPG.textContent = data.sources['PostgreSQL'] || 0;
+        if (elements.srcCountSF) elements.srcCountSF.textContent = data.sources['Snowflake'] || 0;
+
+        // Category counts
         elements.countAll.textContent = data.total || 0;
         elements.countFeature.textContent = data.categories['Feature'] || 0;
         elements.countChanged.textContent = data.categories['Changed'] || 0;
@@ -149,6 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Filter & Render Logic ---
     function getFilteredItems() {
         let filtered = state.items.filter(item => {
+            // Source Filter
+            if (state.activeSource !== 'ALL' && item.source !== state.activeSource) {
+                return false;
+            }
             // Category Filter
             if (state.activeCategory !== 'ALL' && item.category !== state.activeCategory) {
                 return false;
@@ -159,7 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const matchText = (item.text || '').toLowerCase();
                 const matchDate = (item.date || '').toLowerCase();
                 const matchCat = (item.category || '').toLowerCase();
-                return matchText.includes(q) || matchDate.includes(q) || matchCat.includes(q);
+                const matchSrc = (item.source_name || item.source || '').toLowerCase();
+                return matchText.includes(q) || matchDate.includes(q) || matchCat.includes(q) || matchSrc.includes(q);
             }
             return true;
         });
@@ -213,14 +236,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderNoteCard(item) {
         const catClass = `badge-${(item.category || 'general').toLowerCase()}`;
+        const srcClass = `src-badge-${(item.source || 'bigquery').toLowerCase()}`;
         const isSelected = state.selectedIds.has(item.id);
 
         return `
             <div class="note-card ${isSelected ? 'selected' : ''}" data-id="${item.id}">
                 <div class="card-top">
-                    <span class="badge ${catClass}">
-                        ${escapeHtml(item.category)}
-                    </span>
+                    <div class="card-badges">
+                        <span class="badge ${srcClass}">
+                            ${escapeHtml(item.source_name || item.source)}
+                        </span>
+                        <span class="badge ${catClass}">
+                            ${escapeHtml(item.category)}
+                        </span>
+                    </div>
                     <div class="card-meta">
                         <input type="checkbox" class="card-checkbox" data-id="${item.id}" ${isSelected ? 'checked' : ''} title="Select item to tweet">
                     </div>
@@ -323,6 +352,19 @@ document.addEventListener('DOMContentLoaded', () => {
         renderFeed();
     });
 
+    if (elements.sourcePills) {
+        elements.sourcePills.addEventListener('click', (e) => {
+            const pill = e.target.closest('.pill-src');
+            if (!pill) return;
+            
+            document.querySelectorAll('.pill-src').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            
+            state.activeSource = pill.getAttribute('data-source');
+            renderFeed();
+        });
+    }
+
     elements.categoryPills.addEventListener('click', (e) => {
         const pill = e.target.closest('.pill');
         if (!pill) return;
@@ -348,11 +390,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const headers = ['Date', 'Category', 'Summary', 'Documentation Link', 'Updated Timestamp'];
+            const headers = ['Source', 'Date', 'Category', 'Summary', 'Documentation Link', 'Updated Timestamp'];
             const csvRows = [headers.join(',')];
 
             filtered.forEach(item => {
                 const row = [
+                    `"${(item.source_name || item.source || '').replace(/"/g, '""')}"`,
                     `"${(item.date || '').replace(/"/g, '""')}"`,
                     `"${(item.category || '').replace(/"/g, '""')}"`,
                     `"${(item.text || '').replace(/"/g, '""')}"`,

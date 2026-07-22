@@ -396,6 +396,70 @@ body {
     flex-wrap: wrap;
 }
 
+.source-pills-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.pills-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    margin-right: 0.25rem;
+}
+
+.pill-src {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    background: var(--bg-pill);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.775rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pill-src:hover {
+    border-color: var(--border-highlight);
+    color: var(--text-primary);
+}
+
+.pill-src.active {
+    background: linear-gradient(135deg, var(--accent-blue), #1D4ED8);
+    color: white;
+    border-color: var(--accent-blue);
+}
+
+.pill-src .pill-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.1rem 0.4rem;
+    border-radius: 8px;
+    font-size: 0.675rem;
+    font-weight: 700;
+}
+
+.pill-src:not(.active) .pill-count {
+    background: var(--border-color);
+    color: var(--text-muted);
+}
+
+.src-badge-bigquery { background: rgba(66, 133, 244, 0.15); color: #4285F4; border: 1px solid rgba(66, 133, 244, 0.3); }
+.src-badge-oracle { background: rgba(248, 0, 0, 0.15); color: #FF4D4D; border: 1px solid rgba(248, 0, 0, 0.3); }
+.src-badge-tsql { background: rgba(0, 120, 212, 0.15); color: #0078D4; border: 1px solid rgba(0, 120, 212, 0.3); }
+.src-badge-postgresql { background: rgba(51, 103, 145, 0.15); color: #4183C4; border: 1px solid rgba(51, 103, 145, 0.3); }
+.src-badge-snowflake { background: rgba(41, 181, 232, 0.15); color: #29B5E8; border: 1px solid rgba(41, 181, 232, 0.3); }
+
 .pill {
     display: inline-flex;
     align-items: center;

@@ -33,15 +33,15 @@
                     </svg>
                 </div>
                 <div class="brand-text">
-                    <h1>BigQuery <span>Release Radar</span></h1>
-                    <p class="subtitle">Live Official Release Notes & Twitter Share Hub</p>
+                    <h1>SQL <span>Release Radar</span></h1>
+                    <p class="subtitle">Multi-Engine News: BigQuery, Oracle PL/SQL, MS T-SQL, PostgreSQL & Snowflake</p>
                 </div>
             </div>
 
             <div class="header-actions">
                 <div class="status-badge" id="feedStatusBadge">
                     <span class="pulse-dot"></span>
-                    <span class="status-text">Atom Feed Live</span>
+                    <span class="status-text">Multi-SQL Feeds Active</span>
                 </div>
 
                 <!-- Refresh Button with Spinner -->
@@ -71,7 +71,7 @@
                 </div>
                 <div class="stat-info">
                     <span class="stat-value" id="statTotal">--</span>
-                    <span class="stat-label">Total Updates</span>
+                    <span class="stat-label">Total SQL Updates</span>
                 </div>
             </div>
 
@@ -101,7 +101,7 @@
                 </div>
                 <div class="stat-info">
                     <span class="stat-value" id="statLastUpdate">--</span>
-                    <span class="stat-label">Latest Date</span>
+                    <span class="stat-label">Active Sources</span>
                 </div>
             </div>
         </section>
@@ -110,8 +110,19 @@
         <section class="controls-section">
             <div class="search-box">
                 <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="searchInput" placeholder="Search release notes, features, keywords (e.g. Iceberg, SQL, Storage)..." autocomplete="off">
+                <input type="text" id="searchInput" placeholder="Search SQL release notes, features, keywords (e.g. Oracle, T-SQL, BigQuery, Vector)..." autocomplete="off">
                 <button class="btn-clear-search" id="clearSearchBtn" title="Clear Search">&times;</button>
+            </div>
+
+            <!-- SQL Source Filter Pills -->
+            <div class="source-pills-row" id="sourcePills">
+                <span class="pills-label">Database:</span>
+                <button class="pill-src active" data-source="ALL">All SQL Engines <span class="pill-count" id="srcCountAll">0</span></button>
+                <button class="pill-src" data-source="BigQuery">BigQuery <span class="pill-count" id="srcCountBQ">0</span></button>
+                <button class="pill-src" data-source="Oracle">Oracle PL/SQL <span class="pill-count" id="srcCountOracle">0</span></button>
+                <button class="pill-src" data-source="TSQL">MS T-SQL <span class="pill-count" id="srcCountTSQL">0</span></button>
+                <button class="pill-src" data-source="PostgreSQL">PostgreSQL <span class="pill-count" id="srcCountPG">0</span></button>
+                <button class="pill-src" data-source="Snowflake">Snowflake <span class="pill-count" id="srcCountSF">0</span></button>
             </div>
 
             <div class="filter-group">
