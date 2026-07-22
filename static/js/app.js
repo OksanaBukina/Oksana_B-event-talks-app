@@ -295,6 +295,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const tweetLabel = langDict['tweet'] || 'Tweet';
         const linkedinLabel = langDict['linkedin'] || 'LinkedIn';
         const docsLabel = langDict['viewDocs'] || 'View Docs';
+        const translateLabel = langDict['translate'] || 'Translate';
+
+        let cardContentHtml = item.html;
+        if (state.lang !== 'en' && item.translations && item.translations[state.lang]) {
+            cardContentHtml = `<p class="translated-text">🌐 <em>(${state.lang.toUpperCase()}):</em> ${escapeHtml(item.translations[state.lang])}</p>`;
+        }
 
         return `
             <div class="note-card ${isSelected ? 'selected' : ''}" data-id="${item.id}">
@@ -312,8 +318,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
 
-                <div class="card-content">
-                    ${item.html}
+                <div class="card-content" id="card-content-${item.id}">
+                    ${cardContentHtml}
                 </div>
 
                 <div class="card-footer">
@@ -323,6 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </a>
 
                     <div class="card-actions">
+                        <button class="btn btn-sm btn-secondary btn-translate-single" data-id="${item.id}" title="Translate news card content">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                            ${escapeHtml(translateLabel)}
+                        </button>
                         <button class="btn btn-sm btn-secondary btn-copy-single" data-id="${item.id}" title="Copy release note text to clipboard">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                             ${escapeHtml(copyLabel)}
@@ -394,6 +404,27 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // Translate Card Content Buttons
+        document.querySelectorAll('.btn-translate-single').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute('data-id');
+                const item = state.items.find(i => i.id === id);
+                if (item) {
+                    const targetLang = state.lang === 'en' ? 'ru' : state.lang;
+                    const contentElem = document.getElementById(`card-content-${id}`);
+                    if (contentElem) {
+                        contentElem.innerHTML = `<p class="translated-text">⏳ <em>Translating to ${targetLang.toUpperCase()}...</em></p>`;
+                    }
+                    const translatedText = await translateCardItem(item, targetLang);
+                    if (contentElem && translatedText) {
+                        contentElem.innerHTML = `<p class="translated-text">🌐 <em>(${targetLang.toUpperCase()}):</em> ${escapeHtml(translatedText)}</p>`;
+                        showToast(state.lang === 'ru' ? 'Текст карточки переведен!' : (state.lang === 'pl' ? 'Tekst karty przetłumaczony!' : 'Card text translated!'), 'success');
+                    }
+                }
+            });
+        });
+
         // Single Tweet Buttons
         document.querySelectorAll('.btn-tweet-single').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -405,6 +436,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    async function translateCardItem(item, targetLang) {
+        if (!item || !targetLang || targetLang === 'en') return item ? item.text : '';
+        if (!item.translations) item.translations = {};
+        if (item.translations[targetLang]) return item.translations[targetLang];
+
+        try {
+            const response = await fetch('/api/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: item.text, target_lang: targetLang })
+            });
+            const data = await response.json();
+            if (data.translated) {
+                item.translations[targetLang] = data.translated;
+                return data.translated;
+            }
+        } catch (err) {
+            console.error('Translation error:', err);
+        }
+        return item.text;
     }
 
     function updateBatchBar() {

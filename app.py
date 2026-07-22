@@ -351,5 +351,27 @@ def generate_tweet():
         "is_valid": len(tweet_text) <= 280
     })
 
+@app.route("/api/translate", methods=["POST"])
+def translate_text():
+    """API endpoint to translate text to target language (ru, pl, en)."""
+    data = request.get_json() or {}
+    text = data.get("text", "")
+    target_lang = data.get("target_lang", "ru")
+    
+    if not text or target_lang == "en":
+        return jsonify({"translated": text, "target_lang": target_lang})
+        
+    try:
+        url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={target_lang}&dt=t&q={urllib.parse.quote(text)}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            raw_bytes = resp.read()
+            res = json.loads(raw_bytes.decode('utf-8'))
+            translated = "".join([part[0] for part in res[0] if part and part[0]])
+            return jsonify({"translated": translated, "target_lang": target_lang})
+    except Exception as e:
+        print(f"Translation error: {e}")
+        return jsonify({"translated": text, "error": str(e)}), 200
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
